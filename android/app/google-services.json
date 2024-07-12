@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "37178523796",
+    "project_id": "chat-app-310fb",
+    "storage_bucket": "chat-app-310fb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:37178523796:android:a10df034040920b04bb481",
+        "android_client_info": {
+          "package_name": "com.example.realtime_chatapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhCxY6egzn7PESquM6ITAhcIgKenCzFA0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
