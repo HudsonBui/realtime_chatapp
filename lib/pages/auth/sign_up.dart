@@ -21,46 +21,57 @@ class _SignUpPageState extends State<SignUpPage> {
     if (!checkPassword()) return;
 
     //Create new user
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()));
-    var userCredential =
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
-
-    Navigator.pop(context);
-
-    //Take the user after creating account
-    User? user = userCredential.user;
-
-    if (user != null) {
-      print('USER EMAIL: ${user.email}');
-      var userEmail = ' ${user.email}';
-      //print('USER ID: ${user.uid}');
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
-        {
-          'isProfileComplete':
-              false, //flag mark if user has completed profile or not
-          'user': userEmail,
-        },
+    try {
+      showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()));
+      var userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
-      return;
-    }
-    //print('Create account UNSUCCESSFULLY!');
-    // var snackBar = const SnackBar(
-    //   content: Text('Create account success!'),
-    //   duration: Duration(seconds: 2),
-    // );
-    // ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      Navigator.of(context).pop();
 
-    //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const FillInforPage()));
+      //Take the user after creating account
+      User? user = userCredential.user; 
+
+      if (user != null) {
+        //print('USER ID: ${user.uid}');
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
+          {
+            'isProfileComplete':
+                false, //flag mark if user has completed profile or not
+          },
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        var snackBar = const SnackBar(
+          content: Text('The password provided is too weak.'),
+          duration: Duration(seconds: 2),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      } else if (e.code == 'email-already-in-use') {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        var snackBar = const SnackBar(
+          content: Text('The account already exists for that email.'),
+          duration: Duration(seconds: 2),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
+    } catch (e) {
+      print(e);
+    } finally {
+      Navigator.of(context).pop();
+    }
   }
 
   bool checkPassword() {
     if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       var snackBar = const SnackBar(
         content: Text('Password does not match!'),
         duration: Duration(seconds: 2),
@@ -69,6 +80,7 @@ class _SignUpPageState extends State<SignUpPage> {
       return false;
     }
     if (_passwordController.text.length < 6) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       var snackBar = const SnackBar(
         content: Text('Password must be at least 6 characters!'),
         duration: Duration(seconds: 2),

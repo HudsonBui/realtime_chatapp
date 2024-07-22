@@ -14,7 +14,6 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -27,11 +26,6 @@ class MyApp extends StatelessWidget {
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          // if (snapshot.connectionState == ConnectionState.waiting) {
-          //   return const Center(
-          //     child: CircularProgressIndicator(),
-          //   );
-          // }
           if (snapshot.hasData) {
             return StreamBuilder<DocumentSnapshot?>(
               stream: FirebaseFirestore.instance
@@ -39,11 +33,6 @@ class MyApp extends StatelessWidget {
                   .doc(snapshot.data!.uid)
                   .snapshots(),
               builder: (ctx, sns) {
-                // if (sns.connectionState == ConnectionState.waiting) {
-                //   return const Center(
-                //     child: CircularProgressIndicator(),
-                //   );
-                // }
                 if (sns.hasData && sns.data!.data() != null) {
                   var userData = sns.data!.data() as Map<String, dynamic>;
                   if (userData['isProfileComplete']) {
