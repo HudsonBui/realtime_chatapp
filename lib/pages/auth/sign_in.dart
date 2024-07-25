@@ -23,11 +23,22 @@ class _SignInPageState extends State<SignInPage> {
       barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
-    Navigator.pop(context);
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      var snackBar = const SnackBar(
+        content: Text('Email or password is incorrect!'),
+        duration: Duration(seconds: 2),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      print(e);
+    } finally {
+      Navigator.pop(context);
+    }
     print('Login successfully!');
     //Call the method to set the user status to online when the user logs in
     await userStatusServices.setupOnlineOfflineListeners();

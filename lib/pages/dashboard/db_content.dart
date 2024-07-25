@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:realtime_chatapp/screen/chat_screen.dart';
+import 'package:realtime_chatapp/services/user_status_services.dart';
 
 class DashboardContent extends StatefulWidget {
   const DashboardContent({super.key});
@@ -14,19 +16,40 @@ class _DashboardContentState extends State<DashboardContent> {
   var userId = FirebaseAuth.instance.currentUser!.uid;
 
   Future<List<Map<String, dynamic>>> getFriendInfor(userId) async {
-    var querySnapshot = await FirebaseFirestore.instance.collection('friends').get();
+    var querySnapshot =
+        await FirebaseFirestore.instance.collection('friends').get();
     var allRelationship = querySnapshot.docs.map((e) => e.data()).toList();
-    var friendInfor = allRelationship.where((element) => element['userID1'] == userId || element['userID2'] == userId).toList();
+    var friendInfor = allRelationship
+        .where((element) =>
+            element['userID1'] == userId || element['userID2'] == userId)
+        .toList();
     return friendInfor;
   }
 
   //TODO: Get conversation
   Future<List<Map<String, dynamic>>> getConversation(userId) async {
-    var querySnapshot = await FirebaseFirestore.instance.collection('friends').get();
+    var querySnapshot =
+        await FirebaseFirestore.instance.collection('friends').get();
     var allRelationship = querySnapshot.docs.map((e) => e.data()).toList();
-    var friendInfor = allRelationship.where((element) => element['userID1'] == userId || element['userID2'] == userId).toList();
+    var friendInfor = allRelationship
+        .where((element) =>
+            element['userID1'] == userId || element['userID2'] == userId)
+        .toList();
     return friendInfor;
   }
+
+  Future<void> getOnlineUser() async {
+    var dataSnapshot =
+        await FirebaseDatabase.instance.ref().child('user_status').get();
+    var allUserStatuses = dataSnapshot.value as Map<dynamic, dynamic>;
+    var onlineUser = allUserStatuses.entries
+        .where((entry) => entry.value['status'] == 'online')
+        .toList();
+    print(onlineUser);
+    //var filteredUserStatuses = allUserStatuses.entries.where((entry) => /* add your condition here */).toList();
+    //print(filteredUserStatuses);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,6 +83,7 @@ class _DashboardContentState extends State<DashboardContent> {
               ),
               icon: const Icon(Icons.logout),
               onPressed: () async {
+                await UserStatusServices().setUserStatus('offline');
                 await FirebaseAuth.instance.signOut();
               },
             ),
@@ -69,9 +93,7 @@ class _DashboardContentState extends State<DashboardContent> {
       body: Column(
         children: [
           GestureDetector(
-            onTap: () {
-              print('Search button pressed');
-            },
+            onTap: getOnlineUser,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

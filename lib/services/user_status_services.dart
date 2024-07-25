@@ -24,6 +24,7 @@ class UserStatusServices {
 
   Future<void> setupOnlineOfflineListeners() async {
     User? user = _auth.currentUser;
+
     if (user != null) {
       await _userStatusDatabaseReference.child(user.uid).onDisconnect().set(
           {'status': 'offline', 'last_changed': ServerValue.timestamp}).then(
