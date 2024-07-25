@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:realtime_chatapp/pages/auth/forgot_password.dart';
+import 'package:realtime_chatapp/services/user_status_services.dart';
 import 'package:realtime_chatapp/style/text_style.dart';
 
 class SignInPage extends StatefulWidget {
@@ -14,18 +15,22 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final UserStatusServices userStatusServices = UserStatusServices();
 
   Future signIn() async {
     showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()));
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
     await FirebaseAuth.instance.signInWithEmailAndPassword(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
     );
     Navigator.pop(context);
     print('Login successfully!');
+    //Call the method to set the user status to online when the user logs in
+    await userStatusServices.setupOnlineOfflineListeners();
   }
 
   @override

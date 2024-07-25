@@ -54,6 +54,8 @@ class DefaultFirebaseOptions {
     appId: '1:37178523796:android:a10df034040920b04bb481',
     messagingSenderId: '37178523796',
     projectId: 'chat-app-310fb',
+    databaseURL:
+        'https://chat-app-310fb-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'chat-app-310fb.appspot.com',
   );
 
@@ -63,6 +65,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '37178523796',
     projectId: 'chat-app-310fb',
     storageBucket: 'chat-app-310fb.appspot.com',
+    databaseURL:
+        'https://chat-app-310fb-default-rtdb.asia-southeast1.firebasedatabase.app',
     iosBundleId: 'com.example.realtimeChatapp',
   );
 }

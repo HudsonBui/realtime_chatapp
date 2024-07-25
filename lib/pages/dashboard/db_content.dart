@@ -1,35 +1,38 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:realtime_chatapp/screen/chat_screen.dart';
 
 class DashboardContent extends StatefulWidget {
-  const DashboardContent({required this.userName, super.key});
-  final userName;
+  const DashboardContent({super.key});
 
   @override
   State<DashboardContent> createState() => _DashboardContentState();
 }
 
 class _DashboardContentState extends State<DashboardContent> {
-  final _searchContentController = TextEditingController();
+  var userId = FirebaseAuth.instance.currentUser!.uid;
+
+  Future<List<Map<String, dynamic>>> getFriendInfor(userId) async {
+    var querySnapshot = await FirebaseFirestore.instance.collection('friends').get();
+    var allRelationship = querySnapshot.docs.map((e) => e.data()).toList();
+    var friendInfor = allRelationship.where((element) => element['userID1'] == userId || element['userID2'] == userId).toList();
+    return friendInfor;
+  }
+
+  //TODO: Get conversation
+  Future<List<Map<String, dynamic>>> getConversation(userId) async {
+    var querySnapshot = await FirebaseFirestore.instance.collection('friends').get();
+    var allRelationship = querySnapshot.docs.map((e) => e.data()).toList();
+    var friendInfor = allRelationship.where((element) => element['userID1'] == userId || element['userID2'] == userId).toList();
+    return friendInfor;
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       appBar: AppBar(
         backgroundColor: Colors.grey.shade200,
-        // leading: Container(
-        //   margin: const EdgeInsets.only(left: 20),
-        //   child: IconButton(
-        //     icon: const Icon(Icons.menu),
-        //     onPressed: () {},
-        //     style: IconButton.styleFrom(
-        //       backgroundColor: Colors.grey.shade400,
-        //       shape: const CircleBorder(),
-        //       padding: const EdgeInsets.all(12),
-        //     ),
-        //   ),
-        // ),
         leading: Padding(
           padding: const EdgeInsets.only(left: 20),
           child: GestureDetector(
@@ -65,24 +68,31 @@ class _DashboardContentState extends State<DashboardContent> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          GestureDetector(
+            onTap: () {
+              print('Search button pressed');
+            },
             child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.grey.shade300,
                 borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.grey.shade400),
               ),
-              child: TextField(
-                controller: _searchContentController,
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(vertical: 10),
-                  prefixIcon: Icon(Icons.search),
-                  hintText: 'Search',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(30)),
-                    borderSide: BorderSide.none,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.search,
+                    color: Colors.black38,
                   ),
-                ),
+                  Text(
+                    'Search',
+                    style: TextStyle(fontSize: 20, color: Colors.grey.shade100),
+                  ),
+                ],
               ),
             ),
           ),
@@ -99,6 +109,7 @@ class _DashboardContentState extends State<DashboardContent> {
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      //TODO: Get user name!!!!!!!!
                       Container(
                         height: 70,
                         width: 70, // Adjust width as needed

@@ -5,20 +5,25 @@ import 'package:flutter/material.dart';
 import 'package:realtime_chatapp/pages/auth/fill_infor.dart';
 import 'package:realtime_chatapp/screen/auth_screen.dart';
 import 'package:realtime_chatapp/screen/dashboard_screen.dart';
+import 'package:realtime_chatapp/services/user_status_services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  final UserStatusServices userStatusServices = UserStatusServices();
+  if (FirebaseAuth.instance.currentUser != null) {
+    await userStatusServices.setupOnlineOfflineListeners();
+  }
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'XiaoMi Chat App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,

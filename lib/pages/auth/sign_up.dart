@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:realtime_chatapp/services/user_status_services.dart';
 import 'package:realtime_chatapp/style/text_style.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -15,6 +16,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final UserStatusServices userStatusServices = UserStatusServices();
 
   Future signUp() async {
     //Check password
@@ -35,7 +37,7 @@ class _SignUpPageState extends State<SignUpPage> {
       Navigator.of(context).pop();
 
       //Take the user after creating account
-      User? user = userCredential.user; 
+      User? user = userCredential.user;
 
       if (user != null) {
         //print('USER ID: ${user.uid}');
@@ -66,6 +68,8 @@ class _SignUpPageState extends State<SignUpPage> {
       print(e);
     } finally {
       Navigator.of(context).pop();
+      //Call the method to set the user status to online when the user logs in
+      await userStatusServices.setupOnlineOfflineListeners();
     }
   }
 
