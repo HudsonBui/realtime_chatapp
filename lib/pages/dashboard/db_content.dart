@@ -15,39 +15,75 @@ class DashboardContent extends StatefulWidget {
 class _DashboardContentState extends State<DashboardContent> {
   var userId = FirebaseAuth.instance.currentUser!.uid;
 
-  Future<List<Map<String, dynamic>>> getFriendInfor(userId) async {
+  //Take the all Relationship of the current user
+  Future<List<Map<String, dynamic>>> getRelationship() async {
     var querySnapshot =
         await FirebaseFirestore.instance.collection('friends').get();
     var allRelationship = querySnapshot.docs.map((e) => e.data()).toList();
-    var friendInfor = allRelationship
+    var userRelationships = allRelationship
         .where((element) =>
-            element['userID1'] == userId || element['userID2'] == userId)
+            (element['userID1'] == userId || element['userID2'] == userId))
         .toList();
-    return friendInfor;
+    return userRelationships;
   }
 
   //TODO: Get conversation
   Future<List<Map<String, dynamic>>> getConversation(userId) async {
-    var querySnapshot =
-        await FirebaseFirestore.instance.collection('friends').get();
-    var allRelationship = querySnapshot.docs.map((e) => e.data()).toList();
-    var friendInfor = allRelationship
-        .where((element) =>
-            element['userID1'] == userId || element['userID2'] == userId)
-        .toList();
-    return friendInfor;
+    throw UnimplementedError();
   }
 
-  Future<void> getOnlineUser() async {
+  // Stream<List<MapEntry<dynamic, dynamic>>> getOnlineUserStream() {
+  //   return FirebaseDatabase.instance
+  //       .ref()
+  //       .child('user_status')
+  //       .onValue
+  //       .map((event) {
+  //     var dataSnapshot = event.snapshot;
+  //     print(
+  //         'DATASNAPSHOT: $dataSnapshot;\n DATASNAPSHOT VALUE: ${dataSnapshot.value};\n DATASNAPSHOT KEY: ${dataSnapshot.key}');
+  //     var allUserStatuses = dataSnapshot.value as Map<dynamic, dynamic>;
+  //     var allOnlineUser = allUserStatuses.entries
+  //         .where((entry) => entry.value['state'] == 'online')
+  //         .toList();
+  //     var onlineFriends =
+  //         allOnlineUser.where((element) => element.key != userId).toList();
+  //     print('ONLINE FRIENDS: $onlineFriends');
+  //     return onlineFriends;
+  //   });
+  // }
+
+  Future<List<MapEntry<dynamic, dynamic>>> getOnlineUsers() async {
     var dataSnapshot =
         await FirebaseDatabase.instance.ref().child('user_status').get();
     var allUserStatuses = dataSnapshot.value as Map<dynamic, dynamic>;
-    var onlineUser = allUserStatuses.entries
-        .where((entry) => entry.value['status'] == 'online')
+    var allOnlineUser = allUserStatuses.entries
+        .where(
+            (entry) => entry.value['state'] == 'online' && entry.key != userId)
         .toList();
-    print(onlineUser);
-    //var filteredUserStatuses = allUserStatuses.entries.where((entry) => /* add your condition here */).toList();
-    //print(filteredUserStatuses);
+    return allOnlineUser;
+  }
+
+  Stream<List<Map<String, dynamic>>> getFriendsData() {
+    return getOnlineUsers().asStream().asyncMap((allOnlineUser) async {
+      //Take all online user and get their data
+      List<Map<String, dynamic>> friendData = [];
+      var userRelationships = await getRelationship();
+      await Future.forEach(allOnlineUser, (element) async {
+        var value = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(element.key)
+            .get();
+        //Check if the online user is friend with the current user
+        var isFriend = userRelationships.any((relationship) =>
+            (relationship['userID1'] == value.id ||
+                relationship['userID2'] == value.id));
+        if (isFriend && value.data() != null) {
+          friendData.add(value.data()!);
+        }
+      });
+      print("FRIEND DATA: $friendData");
+      return friendData;
+    });
   }
 
   @override
@@ -93,7 +129,7 @@ class _DashboardContentState extends State<DashboardContent> {
       body: Column(
         children: [
           GestureDetector(
-            onTap: getOnlineUser,
+            onTap: (){},
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -123,34 +159,55 @@ class _DashboardContentState extends State<DashboardContent> {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: SizedBox(
               height: 110,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                itemCount: 10,
-                itemBuilder: (context, index) {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      //TODO: Get user name!!!!!!!!
-                      Container(
-                        height: 70,
-                        width: 70, // Adjust width as needed
-                        margin: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade400,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Item $index',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-                      Text('Item $index'),
-                    ],
-                  );
-                },
+              child: StreamBuilder(
+                //TODO: get user infor stream
+                stream: getFriendsData(),
+                builder: ((ctx, sns) {
+                  if (sns.hasError) {
+                    return const Center(
+                      child: Text('Error loading online users'),
+                    );
+                  }
+                  if (sns.hasData && sns.data != null) {
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      shrinkWrap: true,
+                      itemCount: sns.data!.length,
+                      //itemCount: 10,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              height: 70,
+                              width: 70, // Adjust width as needed
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade400,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Item $index',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                            Text(
+                              sns.data![index]['fName'],
+                              //'Name',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
+                  return Container();
+                }),
               ),
             ),
           ),

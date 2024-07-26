@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -27,7 +26,7 @@ class UserStatusServices {
 
     if (user != null) {
       await _userStatusDatabaseReference.child(user.uid).onDisconnect().set(
-          {'status': 'offline', 'last_changed': ServerValue.timestamp}).then(
+          {'state': 'offline', 'last_changed': ServerValue.timestamp}).then(
         (_) {
           setUserStatus('online');
         },
