@@ -2,12 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class SearchFriend extends SearchDelegate<String> {
-  Future<List<Map<String, dynamic>>> getUserInfor() async {
-    var querySnapshot =
-        await FirebaseFirestore.instance.collection('users').get();
-    var userData = querySnapshot.docs.map((e) => e.data()).toList();
-    return userData;
-  }
+  SearchFriend({required this.allFriendsData});
+  final List<Map<String, dynamic>> allFriendsData;
 
   @override
   List<Widget>? buildActions(BuildContext context) {
@@ -33,28 +29,86 @@ class SearchFriend extends SearchDelegate<String> {
 
   @override
   Widget buildResults(BuildContext context) {
-    // return FutureBuilder<List<Map<String, dynamic>>>(future: getUserInfor(), builder: (ctx, snp) {
-    //   if(snp.connectionState == ConnectionState.waiting) {
-    //     return const Center(child: CircularProgressIndicator());
-    //   }if(snp.hasError) {
-    //     return const Center(child: Text('An error occurred!'));
-    //   }if(snp.hasData) {
-    //     return ListView.builder(
-    //       itemCount: snp.data!.length,
-    //       itemBuilder: (context, index) {
-    //         return ListTile(
-
-    //         )
-    //       },
-    //     )
-    //   }
-    // });
-    throw UnimplementedError();
+    List<Map<String, dynamic>> matchQuery = [];
+    allFriendsData.forEach((element) {
+      var userName = element['lName'] + ' ' + element['fName'];
+      if (userName.toLowerCase().contains(query.toLowerCase())) {
+        matchQuery.add(element);
+      }
+    });
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 25),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 10),
+            const Text(
+              'Search result',
+              style: TextStyle(color: Colors.black, fontSize: 20),
+            ),
+            const SizedBox(height: 5),
+            matchQuery.isEmpty
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: Text(
+                        'There no match friend',
+                        style: TextStyle(color: Colors.black38, fontSize: 15),
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: matchQuery.length,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Text(matchQuery[index]['lName'] +
+                            ' ' +
+                            matchQuery[index]['fName']),
+                      );
+                    },
+                  ),
+            const SizedBox(height: 10),
+            const Text(
+              'People you may know',
+              style: TextStyle(color: Colors.black, fontSize: 20),
+            ),
+            const SizedBox(height: 5),
+            //TODO: Add people you may know
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    // TODO: implement buildSuggestions
-    throw UnimplementedError();
+    List<Map<String, dynamic>> matchQuery = [];
+    allFriendsData.forEach((element) {
+      var userName = element['lName'] + ' ' + element['fName'];
+      if (userName.toLowerCase().contains(query.toLowerCase())) {
+        matchQuery.add(element);
+      }
+    });
+    return query.isEmpty
+        ? const Center(
+            child: Text(
+              'There is no result!',
+              style: TextStyle(color: Colors.black38, fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
+          )
+        : ListView.builder(
+            itemCount: matchQuery.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(matchQuery[index]['lName'] +
+                    ' ' +
+                    matchQuery[index]['fName']),
+              );
+            },
+          );
   }
 }

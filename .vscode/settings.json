@@ -1,3 +1,11 @@
 {
-  "java.configuration.updateBuildConfiguration": "interactive"
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+  "explorer.experimental.fileNesting.enabled": true,
+  "explorer.experimental.fileNesting.expand": false,
+  "explorer.experimental.fileNesting.patterns": {
+    "pubspec.yaml": ".packages, .metadata, .pubspec.lock, analysis_options.yaml, .dart_tool, .flutter-plugins, .flutter-plugins-dependencies",
+  }
 }

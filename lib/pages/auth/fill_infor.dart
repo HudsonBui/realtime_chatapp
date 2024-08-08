@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:realtime_chatapp/style/text_style.dart';
@@ -17,6 +18,7 @@ class _FillInforPageState extends State<FillInforPage> {
   final _phoneNumberController = TextEditingController();
   var _dateOfBirthController;
   var dateOfBirthFormatted;
+  var user = FirebaseAuth.instance.currentUser;
 
   void pickDateTime() {
     var initialDate = DateTime.now();
@@ -121,14 +123,15 @@ class _FillInforPageState extends State<FillInforPage> {
       print('Data is not valid!');
       return;
     }
-    ;
 
     Timestamp dateOfBirth = Timestamp.fromDate(_dateOfBirthController);
-
     await FirebaseFirestore.instance
         .collection('users')
         .doc(widget.userId)
         .set({
+      //TODO: Add user image field
+      'uid': widget.userId,
+      'email': user!.email,
       'fName': _firstNameController.text,
       'lName': _lastNameController.text,
       'phoneNumber': _phoneNumberController.text,

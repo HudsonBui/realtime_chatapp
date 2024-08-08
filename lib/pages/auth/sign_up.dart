@@ -41,6 +41,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
       if (user != null) {
         //print('USER ID: ${user.uid}');
+
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
           {
             'isProfileComplete':

@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:realtime_chatapp/navbar/nav_bar.dart';
+import 'package:realtime_chatapp/pages/search/search_friend.dart';
 import 'package:realtime_chatapp/screen/chat_screen.dart';
 import 'package:realtime_chatapp/services/user_status_services.dart';
 
@@ -13,57 +15,29 @@ class DashboardContent extends StatefulWidget {
 }
 
 class _DashboardContentState extends State<DashboardContent> {
-  var userId = FirebaseAuth.instance.currentUser!.uid;
+  var currentUser = FirebaseAuth.instance.currentUser;
 
-  //Take the all Relationship of the current user
-  Future<List<Map<String, dynamic>>> getRelationship() async {
+  Future<List<String>> getFriendsId() async {
+    List<String> friendIds = [];
     var querySnapshot =
         await FirebaseFirestore.instance.collection('friends').get();
     var allRelationship = querySnapshot.docs.map((e) => e.data()).toList();
     var userRelationships = allRelationship
-        .where((element) =>
-            (element['userID1'] == userId || element['userID2'] == userId))
+        .where((element) => (element['userID1'] == currentUser!.uid ||
+            element['userID2'] == currentUser!.uid))
         .toList();
-    return userRelationships;
+
+    for (var element in userRelationships) {
+      if (element['userID1'] == currentUser!.uid) {
+        friendIds.add(element['userID2']);
+      } else {
+        friendIds.add(element['userID1']);
+      }
+    }
+    return friendIds;
   }
 
-  // Future<List<MapEntry<dynamic, dynamic>>> getOnlineUsers() async {
-  //   var dataSnapshot =
-  //       await FirebaseDatabase.instance.ref().child('user_status').get();
-  //   var allUserStatuses = dataSnapshot.value as Map<dynamic, dynamic>;
-  //   var allOnlineUser = allUserStatuses.entries
-  //       .where(
-  //           (entry) => entry.value['state'] == 'online' && entry.key != userId)
-  //       .toList();
-  //   return allOnlineUser;
-  // }
-
-  // Stream<List<Map<String, dynamic>>> getFriendsData() {
-  //   return getOnlineUsers().asStream().asyncMap((allOnlineUser) async {
-  //     //Take all online user and get their data
-  //     List<Map<String, dynamic>> friendData = [];
-  //     var userRelationships = await getRelationship();
-  //     //print('USER RELATIONSHIP: $userRelationships');
-  //     await Future.forEach(allOnlineUser, (element) async {
-  //       var value = await FirebaseFirestore.instance
-  //           .collection('users')
-  //           .doc(element.key)
-  //           .get();
-  //       //print('USER DATA: ${value.data()}');
-  //       //Check if the online user is friend with the current user
-  //       var isFriend = userRelationships.any((relationship) =>
-  //           (relationship['userID1'] == value.id ||
-  //               relationship['userID2'] == value.id));
-  //       if (isFriend && value.data() != null) {
-  //         friendData.add(value.data()!);
-  //       }
-  //     });
-  //     //print("FRIEND DATA: $friendData");
-  //     return friendData;
-  //   });
-  // }
-
-  Stream<List<Map<String, dynamic>>> getFriendsData() {
+  Stream<List<Map<String, dynamic>>> getOnlineFriendsData() {
     return FirebaseDatabase.instance
         .ref()
         .child('user_status')
@@ -72,20 +46,18 @@ class _DashboardContentState extends State<DashboardContent> {
       var allOnlineUserStatuses = event.snapshot.value as Map<dynamic, dynamic>;
       var allOnlineUser = allOnlineUserStatuses.entries
           .where((entry) =>
-              entry.value['state'] == 'online' && entry.key != userId)
+              entry.value['state'] == 'online' && entry.key != currentUser!.uid)
           .toList();
 
       List<Map<String, dynamic>> friendData = [];
-      var userRelationships = await getRelationship();
 
+      var friendIds = await getFriendsId();
       await Future.forEach(allOnlineUser, (element) async {
         var value = await FirebaseFirestore.instance
             .collection('users')
             .doc(element.key)
             .get();
-        var isFriend = userRelationships.any((relationship) =>
-            (relationship['userID1'] == value.id ||
-                relationship['userID2'] == value.id));
+        var isFriend = friendIds.any((id) => id == value.id);
         if (isFriend && value.data() != null) {
           friendData.add(value.data()!);
         }
@@ -95,29 +67,65 @@ class _DashboardContentState extends State<DashboardContent> {
     });
   }
 
+  Future<List<Map<String, dynamic>>> getAllFriendsData() async {
+    final List<String> friendIds = await getFriendsId();
+    //print('FRIEND IDS: $friendIds');
+
+    final List<Map<String, dynamic>> friendData = [];
+    await Future.forEach(friendIds, (element) async {
+      final Map<String, dynamic> userData = await getUserData(element);
+      //print('USER SNAPSHOT: ${userSnapshot.data()}');
+      if (userData.isNotEmpty) {
+        friendData.add(userData);
+      } else {
+        print('User data is empty');
+      }
+    });
+
+    return friendData;
+  }
+
+  Future<List<Map<String, dynamic>>> getSuggestionFriendsData() async {
+    //TODO: Get suggestion friends data
+    throw UnimplementedError();
+  }
+
+  Future<Map<String, dynamic>> getUserData(uid) async {
+    DocumentSnapshot<Map<String, dynamic>> userFetchedData;
+    try {
+      userFetchedData =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      return userFetchedData.data()!;
+    } catch (e) {
+      print('Error fetching user data: $e');
+      return {};
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
+      drawer: const MainNavBar(),
       appBar: AppBar(
         backgroundColor: Colors.grey.shade200,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: GestureDetector(
-            onTap: () {
-              print('Menu button pressed');
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade400,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.menu,
-              ),
-            ),
-          ),
-        ),
+        // leading: Padding(
+        //   padding: const EdgeInsets.only(left: 20),
+        //   child: GestureDetector(
+        //     onTap: () {
+        //       print('Menu button pressed');
+        //     },
+        //     child: Container(
+        //       decoration: BoxDecoration(
+        //         color: Colors.grey.shade400,
+        //         shape: BoxShape.circle,
+        //       ),
+        //       child: const Icon(
+        //         Icons.menu,
+        //       ),
+        //     ),
+        //   ),
+        // ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 20),
@@ -138,7 +146,18 @@ class _DashboardContentState extends State<DashboardContent> {
       body: Column(
         children: [
           GestureDetector(
-            onTap: () {},
+            onTap: () async {
+              //var friends = await getRelationship();
+              var friends = await getAllFriendsData();
+              // var friends = await getFriendsId();
+              print('FRIENDS: $friends');
+              showSearch(
+                context: context,
+                delegate: SearchFriend(
+                  allFriendsData: await getAllFriendsData(),
+                ),
+              );
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -155,9 +174,10 @@ class _DashboardContentState extends State<DashboardContent> {
                     Icons.search,
                     color: Colors.black38,
                   ),
+                  const SizedBox(width: 10),
                   Text(
                     'Search',
-                    style: TextStyle(fontSize: 20, color: Colors.grey.shade100),
+                    style: TextStyle(fontSize: 20, color: Colors.grey.shade500),
                   ),
                 ],
               ),
@@ -166,7 +186,7 @@ class _DashboardContentState extends State<DashboardContent> {
           const SizedBox(height: 10),
           StreamBuilder(
             //TODO: get user infor stream
-            stream: getFriendsData(),
+            stream: getOnlineFriendsData(),
             builder: ((ctx, sns) {
               if (sns.hasError) {
                 return const Center(
