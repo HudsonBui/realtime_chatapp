@@ -1,19 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:realtime_chatapp/models/user_models.dart';
+import 'package:realtime_chatapp/providers/account_provider.dart';
 import 'package:realtime_chatapp/style/text_style.dart';
 
-class EditProfilePage extends StatefulWidget {
+class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({required this.user, super.key});
   final UserModel user;
 
   @override
-  State<EditProfilePage> createState() => _EditProfilePageState();
+  ConsumerState<EditProfilePage> createState() => _EditProfilePageState();
 }
 
-class _EditProfilePageState extends State<EditProfilePage> {
+class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
   final phoneNumberController = TextEditingController();
@@ -44,25 +46,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
         .where('phoneNumber', isEqualTo: phoneNumberController.text.trim())
         .get();
     var userData = querySnapshot.docs.map((e) => e.data()).toList();
-    if (userData.isNotEmpty &&
-        userData[0]['phoneNumber'] != widget.user.phone) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      var snackBar = const SnackBar(
-        content: Text('This phone number is already in use!'),
-        duration: Duration(seconds: 2),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      return false;
-    }
-    if (phoneNumberController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      var snackBar = const SnackBar(
-        content: Text('Please enter your phone number!'),
-        duration: Duration(seconds: 2),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      return false;
-    }
+
+    // if (phoneNumberController.text.trim().isEmpty) {
+    //   ScaffoldMessenger.of(context).clearSnackBars();
+    //   var snackBar = const SnackBar(
+    //     content: Text('Please enter your phone number!'),
+    //     duration: Duration(seconds: 2),
+    //   );
+    //   ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    //   return false;
+    // }
     if (phoneNumberController.text.trim().length != 10) {
       ScaffoldMessenger.of(context).clearSnackBars();
       var snackBar = const SnackBar(
@@ -81,45 +74,75 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
       return false;
     }
+    if (userData[0]['phoneNumber'] == phoneNumberController.text.trim()) {
+      return true;
+    }
+    if (userData.isNotEmpty) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      var snackBar = const SnackBar(
+        content: Text('This phone number is already in use!'),
+        duration: Duration(seconds: 2),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      return false;
+    }
     return true;
   }
 
-  Future<bool> checkData() async {
+  // Future<bool> checkData() async {
+  //   if (firstNameController.text.trim().isEmpty) {
+  //     ScaffoldMessenger.of(context).clearSnackBars();
+  //     var snackBar = const SnackBar(
+  //       content: Text('Please enter your first name!'),
+  //       duration: Duration(seconds: 2),
+  //     );
+  //     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  //     return false;
+  //   }
+  //   if (lastNameController.text.trim().isEmpty) {
+  //     ScaffoldMessenger.of(context).clearSnackBars();
+  //     var snackBar = const SnackBar(
+  //       content: Text('Please enter your last name!'),
+  //       duration: Duration(seconds: 2),
+  //     );
+  //     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  //     return false;
+  //   }
+  //   if (dateOfBirthController == null) {
+  //     ScaffoldMessenger.of(context).clearSnackBars();
+  //     var snackBar = const SnackBar(
+  //       content: Text('Please pick your date of birth!'),
+  //       duration: Duration(seconds: 2),
+  //     );
+  //     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  //     return false;
+  //   }
+  //   var isPhoneNumberValid = await checkPhoneNumber();
+  //   if (!isPhoneNumberValid) return false;
+  //   return true;
+  // }
+
+  void setDefaultValue() {
     if (firstNameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      var snackBar = const SnackBar(
-        content: Text('Please enter your first name!'),
-        duration: Duration(seconds: 2),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      return false;
+      firstNameController.text = widget.user.fName;
     }
     if (lastNameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      var snackBar = const SnackBar(
-        content: Text('Please enter your last name!'),
-        duration: Duration(seconds: 2),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      return false;
+      lastNameController.text = widget.user.lName;
     }
     if (dateOfBirthController == null) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      var snackBar = const SnackBar(
-        content: Text('Please pick your date of birth!'),
-        duration: Duration(seconds: 2),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      return false;
+      dateOfBirthController = widget.user.dateOfBirth;
+      dateOfBirthFormatted =
+          DateFormat('dd/MM/yyyy').format(widget.user.dateOfBirth);
     }
-    var isPhoneNumberValid = await checkPhoneNumber();
-    if (!isPhoneNumberValid) return false;
-    return true;
+    if (phoneNumberController.text.trim().isEmpty) {
+      phoneNumberController.text = widget.user.phone;
+    }
   }
 
   void setData() async {
     print('SETDATA CALLED');
-    var isDataValid = await checkData();
+    setDefaultValue();
+    var isDataValid = await checkPhoneNumber();
     if (!isDataValid) {
       print('Data is not valid!');
       return;
@@ -133,10 +156,29 @@ class _EditProfilePageState extends State<EditProfilePage> {
         .set({
       'fName': firstNameController.text,
       'lName': lastNameController.text,
+      //TODO: Add update user's photo
       'phoneNumber': phoneNumberController.text,
       'dateOfBirth': dateOfBirth,
       'isProfileComplete': true,
     });
+
+    ref.read(accountInformationNotifierProvider.notifier).updateUser(UserModel(
+          uid: FirebaseAuth.instance.currentUser!.uid,
+          fName: firstNameController.text,
+          lName: lastNameController.text,
+          phone: phoneNumberController.text,
+          email: widget.user.email,
+          photoUrl: '',
+          isProfileComplete: true,
+          dateOfBirth: dateOfBirthController!,
+        ));
+    ScaffoldMessenger.of(context).clearSnackBars();
+    var snackBar = const SnackBar(
+      content: Text('Profile updated successfully!'),
+      duration: Duration(seconds: 2),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    Navigator.of(context).pop();
   }
 
   @override

@@ -15,7 +15,7 @@ void main() async {
   if (FirebaseAuth.instance.currentUser != null) {
     await userStatusServices.setupOnlineOfflineListeners();
   }
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(const ProviderScope( child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

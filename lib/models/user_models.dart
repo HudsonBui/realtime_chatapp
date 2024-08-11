@@ -28,7 +28,7 @@ class UserModel {
       lName: data['lName'] ?? '',
       email: data['email'] ?? '',
       phone: data['phoneNumber'] ?? '',
-      photoUrl: '',
+      photoUrl: data['photoUrl'] ?? '',
       isProfileComplete: data['isProfileComplete'] ?? false,
       dateOfBirth: (data['dateOfBirth'] as Timestamp).toDate(),
     );
