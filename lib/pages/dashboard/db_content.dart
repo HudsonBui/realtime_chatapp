@@ -2,19 +2,23 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:realtime_chatapp/navbar/nav_bar.dart';
 import 'package:realtime_chatapp/pages/search/search_friend.dart';
+import 'package:realtime_chatapp/providers/user_provider.dart';
 import 'package:realtime_chatapp/screen/chat_screen.dart';
 import 'package:realtime_chatapp/services/user_status_services.dart';
+import 'package:realtime_chatapp/providers/chats_provider.dart';
 
-class DashboardContent extends StatefulWidget {
+class DashboardContent extends ConsumerStatefulWidget {
   const DashboardContent({super.key});
 
   @override
-  State<DashboardContent> createState() => _DashboardContentState();
+  ConsumerState<DashboardContent> createState() => _DashboardContentState();
 }
 
-class _DashboardContentState extends State<DashboardContent> {
+class _DashboardContentState extends ConsumerState<DashboardContent> {
   var currentUser = FirebaseAuth.instance.currentUser;
 
   Future<List<String>> getFriendsId() async {
@@ -102,30 +106,32 @@ class _DashboardContentState extends State<DashboardContent> {
     }
   }
 
+  String formateLastMessTime(DateTime time) {
+    var now = DateTime.now();
+    var difference = now.difference(time);
+    if (difference.inDays < 365) {
+      if (difference.inDays == 0) {
+        if (difference.inHours == 0) {
+          if (difference.inMinutes == 0) {
+            return 'Just now';
+          }
+          return '${difference.inMinutes} minutes ago';
+        }
+        return DateFormat('h:mm a').format(time);
+      }
+      return DateFormat('h:mm a dd/MM').format(time);
+    }
+    return DateFormat('h:mm a dd/MM/yyyy').format(time);
+  }
+
   @override
   Widget build(BuildContext context) {
+    var chatNotifer = ref.watch(chatNotifierProvider);
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       drawer: const MainNavBar(),
       appBar: AppBar(
         backgroundColor: Colors.grey.shade200,
-        // leading: Padding(
-        //   padding: const EdgeInsets.only(left: 20),
-        //   child: GestureDetector(
-        //     onTap: () {
-        //       print('Menu button pressed');
-        //     },
-        //     child: Container(
-        //       decoration: BoxDecoration(
-        //         color: Colors.grey.shade400,
-        //         shape: BoxShape.circle,
-        //       ),
-        //       child: const Icon(
-        //         Icons.menu,
-        //       ),
-        //     ),
-        //   ),
-        // ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 20),
@@ -247,68 +253,115 @@ class _DashboardContentState extends State<DashboardContent> {
               return Container();
             }),
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (ctx) => const ChatScreen()));
-                  },
-                  child: Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              height: 60,
-                              width: 60,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade400,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'User Name',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+          chatNotifer.when(
+            data: (chat) {
+              return chat.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Start a conversation',
+                        style: TextStyle(fontSize: 20, color: Colors.black45),
+                      ),
+                    )
+                  : Expanded(
+                      child: ListView.builder(
+                        itemCount: chat.length,
+                        itemBuilder: (context, index) {
+                          //get id of the friend of the current user
+                          var friendUID = chat[index]
+                              .participants
+                              .where((element) => element != currentUser!.uid)
+                              .first;
+                          var friendInforServices = ref
+                              .watch(userDetailProvider)
+                              .getUserInformation(friendUID);
+                          return FutureBuilder(
+                            future: friendInforServices,
+                            builder: (ctx, snp) {
+                              print('USER MODEL: ${snp.data}');
+                              if (snp.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Text('Loading...');
+                              }
+                              if (snp.hasError) {
+                                return Text(snp.error.toString());
+                              }
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (ctx) =>
+                                              ChatScreen(user: snp.data!)));
+                                },
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5),
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                  child: Column(
                                     children: [
-                                      Text('Content'),
-                                      Text('Date'),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            height: 60,
+                                            width: 60,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey.shade400,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  '${snp.data!.fName} ${snp.data!.lName}',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(chat[index]
+                                                        .lastMessage),
+                                                    Text(formateLastMessTime(
+                                                        chat[index]
+                                                            .lastMessageTime)),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ],
-                                  )
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    );
+            },
+            error: (error, stack) {
+              return Center(
+                child: Text(error.toString()),
+              );
+            },
+            loading: () {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            },
           ),
         ],
       ),

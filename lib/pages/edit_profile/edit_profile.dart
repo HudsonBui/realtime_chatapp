@@ -162,7 +162,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       'isProfileComplete': true,
     });
 
-    ref.read(accountInformationNotifierProvider.notifier).updateUser(UserModel(
+    await ref
+        .read(accountInformationNotifierProvider.notifier)
+        .updateUser(UserModel(
           uid: FirebaseAuth.instance.currentUser!.uid,
           fName: firstNameController.text,
           lName: lastNameController.text,

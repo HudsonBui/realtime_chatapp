@@ -44,12 +44,12 @@ class _MainNavBarState extends ConsumerState<MainNavBar> {
       } on FirebaseException catch (e) {
         print(e);
       }
-      print(user.uid);
+      //print(user.uid);
       var imageUrl = await FirebaseStorage.instance
           .ref('user_avatar/${user.uid}')
           .getDownloadURL();
-      print('Image URL: $imageUrl');
-      ref.read(accountInformationNotifierProvider.notifier).updateUser(
+      //print('Image URL: $imageUrl');
+      await ref.read(accountInformationNotifierProvider.notifier).updateUser(
             UserModel(
               uid: user.uid,
               fName: user.fName,

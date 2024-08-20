@@ -17,11 +17,9 @@ class _ChatBoxState extends State<ChatBox> {
       return;
     }
     await FirebaseFirestore.instance.collection('chat').add({
-      'sender': 'senderUID',
-      'receiver': 'receirverUID',
+      //TODO: Determine which fields are required for the chat message.
     });
     //TODO: Collect the receiver's UID from the chat screen.
-    //TODO: Send the message to the receiver's UID.
     chatBoxController.clear();
   }
 
