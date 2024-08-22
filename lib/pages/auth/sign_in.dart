@@ -39,6 +39,8 @@ class _SignInPageState extends State<SignInPage> {
     } finally {
       Navigator.pop(context);
     }
+    // print(
+    //     'USER ID (signIn - sign_in): ${FirebaseAuth.instance.currentUser!.uid}');
     print('Login successfully!');
     //Call the method to set the user status to online when the user logs in
     await userStatusServices.setupOnlineOfflineListeners();

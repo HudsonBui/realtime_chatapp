@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:realtime_chatapp/models/chat_model.dart';
 import 'package:realtime_chatapp/models/message_model.dart';
+import 'package:realtime_chatapp/providers/chats_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'messages_provider.g.dart';
@@ -11,10 +13,12 @@ class MessagesNotifier extends _$MessagesNotifier {
   //Initiate value
   @override
   Stream<List<MessageModel>> build(String chatId) {
+    print('CHAT ID (build - messages_provider): $chatId');
     return FirebaseFirestore.instance
         .collection('chats')
         .doc(chatId)
         .collection('messages')
+        .orderBy('timestamp', descending: true)
         .snapshots()
         .map(
       (snapshot) {
@@ -26,8 +30,17 @@ class MessagesNotifier extends _$MessagesNotifier {
   }
 
   //update function
-  Future addMessage(MessageModel message, String chatId) async {
-    FirebaseFirestore.instance
+  Future addMessage(
+      MessageModel message, String chatId, List<String> participants) async {
+    //TODO: implement addNewChat function
+    await ref.read(chatNotifierProvider.notifier).addNewChat(
+          ChatModel(
+              chatId: chatId,
+              lastMessage: message.message,
+              lastMessageTime: message.timestamp,
+              participants: participants),
+        );
+    await FirebaseFirestore.instance
         .collection('chats')
         .doc(chatId)
         .collection('messages')
@@ -40,3 +53,4 @@ class MessagesNotifier extends _$MessagesNotifier {
     });
   }
 }
+//this is the thockiest keyboard

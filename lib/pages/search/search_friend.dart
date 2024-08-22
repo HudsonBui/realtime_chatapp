@@ -1,9 +1,20 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:realtime_chatapp/screen/chat_screen.dart';
 
 class SearchFriend extends SearchDelegate<String> {
   SearchFriend({required this.allFriendsData});
   final List<Map<String, dynamic>> allFriendsData;
+
+  var authenticatedUser = FirebaseAuth.instance.currentUser;
+  String createParticipantsList(String otherUserId) {
+    List<String> participants = [otherUserId];
+    participants.add(authenticatedUser!.uid);
+    participants.sort();
+    print(
+        'CHAT ID (createParticipantsList - search_friend): ${participants.join('_')}');
+    return participants.join('_');
+  }
 
   @override
   List<Widget>? buildActions(BuildContext context) {
@@ -30,12 +41,14 @@ class SearchFriend extends SearchDelegate<String> {
   @override
   Widget buildResults(BuildContext context) {
     List<Map<String, dynamic>> matchQuery = [];
-    allFriendsData.forEach((element) {
+    for (var element in allFriendsData) {
       var userName = element['lName'] + ' ' + element['fName'];
       if (userName.toLowerCase().contains(query.toLowerCase())) {
+        print('USER INFOR (buildResults - search_friend): ${element['uid']}');
         matchQuery.add(element);
       }
-    });
+    }
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25),
@@ -64,6 +77,22 @@ class SearchFriend extends SearchDelegate<String> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemBuilder: (context, index) {
                       return ListTile(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) {
+                              print(
+                                  'CHAT ID (buildResults - search_friend): ${createParticipantsList(matchQuery[index]['uid'])}');
+                              return ChatScreen(
+                                chatId: createParticipantsList(
+                                    matchQuery[index]['uid']),
+                                participantsId: [
+                                  matchQuery[index]['uid'],
+                                  authenticatedUser!.uid
+                                ],
+                              );
+                            }),
+                          );
+                        },
                         title: Text(matchQuery[index]['lName'] +
                             ' ' +
                             matchQuery[index]['fName']),
@@ -86,12 +115,12 @@ class SearchFriend extends SearchDelegate<String> {
   @override
   Widget buildSuggestions(BuildContext context) {
     List<Map<String, dynamic>> matchQuery = [];
-    allFriendsData.forEach((element) {
+    for (var element in allFriendsData) {
       var userName = element['lName'] + ' ' + element['fName'];
       if (userName.toLowerCase().contains(query.toLowerCase())) {
         matchQuery.add(element);
       }
-    });
+    }
     return query.isEmpty
         ? const Center(
             child: Text(
@@ -104,6 +133,22 @@ class SearchFriend extends SearchDelegate<String> {
             itemCount: matchQuery.length,
             itemBuilder: (context, index) {
               return ListTile(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) {
+                      print(
+                          'CHAT ID (buildSuggestions - search_friend): ${createParticipantsList(matchQuery[index]['uid'])}');
+                      return ChatScreen(
+                        chatId:
+                            createParticipantsList(matchQuery[index]['uid']),
+                        participantsId: [
+                          matchQuery[index]['uid'],
+                          authenticatedUser!.uid
+                        ],
+                      );
+                    }),
+                  );
+                },
                 title: Text(matchQuery[index]['lName'] +
                     ' ' +
                     matchQuery[index]['fName']),

@@ -7,5 +7,6 @@
   "explorer.experimental.fileNesting.expand": false,
   "explorer.experimental.fileNesting.patterns": {
     "pubspec.yaml": ".packages, .metadata, .pubspec.lock, analysis_options.yaml, .dart_tool, .flutter-plugins, .flutter-plugins-dependencies",
-  }
+  },
+  "cmake.sourceDirectory": "F:/ProgLang/flutter/realtime_chatapp/realtime_chatapp/linux"
 }

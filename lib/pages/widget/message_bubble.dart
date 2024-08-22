@@ -50,13 +50,32 @@ class MessageBubble extends StatelessWidget {
             top: 15,
             // Align user image to the right, if the message is from me.
             right: isMe ? 0 : null,
-            child: CircleAvatar(
-              backgroundImage: NetworkImage(
-                userImage!,
-              ),
-              backgroundColor: theme.colorScheme.primary.withAlpha(180),
-              radius: 23,
-            ),
+            child: userImage != ''
+                ? CircleAvatar(
+                    backgroundImage: NetworkImage(
+                      userImage!,
+                    ),
+                    backgroundColor: theme.colorScheme.primary.withAlpha(180),
+                    radius: 23,
+                  )
+                : ClipOval(
+                    child: Container(
+                      height: 46,
+                      width: 46,
+                      color: Colors.blue.shade600,
+                      child: Center(
+                        child: Text(
+                            username!
+                                .toString()
+                                .split(' ')
+                                .last
+                                .substring(0, 1)
+                                .toUpperCase(),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 30)),
+                      ),
+                    ),
+                  ),
           ),
         Container(
           // Add some margin to the edges of the messages, to allow space for the
@@ -93,8 +112,8 @@ class MessageBubble extends StatelessWidget {
                   Container(
                     decoration: BoxDecoration(
                       color: isMe
-                          ? Colors.grey[300]
-                          : theme.colorScheme.secondary.withAlpha(200),
+                          ? theme.colorScheme.secondary.withAlpha(200)
+                          : Colors.grey[300],
                       // Only show the message bubble's "speaking edge" if first in
                       // the chain.
                       // Whether the "speaking edge" is on the left or right depends
@@ -130,8 +149,8 @@ class MessageBubble extends StatelessWidget {
                         // when multilined.
                         height: 1.3,
                         color: isMe
-                            ? Colors.black87
-                            : theme.colorScheme.onSecondary,
+                            ? theme.colorScheme.onSecondary
+                            : Colors.black87,
                       ),
                       softWrap: true,
                     ),

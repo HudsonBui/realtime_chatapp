@@ -127,6 +127,7 @@ class _DashboardContentState extends ConsumerState<DashboardContent> {
   @override
   Widget build(BuildContext context) {
     var chatNotifer = ref.watch(chatNotifierProvider);
+    var theme = Theme.of(context);
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       drawer: const MainNavBar(),
@@ -189,7 +190,6 @@ class _DashboardContentState extends ConsumerState<DashboardContent> {
               ),
             ),
           ),
-          const SizedBox(height: 10),
           StreamBuilder(
             //TODO: get user infor stream
             stream: getOnlineFriendsData(),
@@ -201,8 +201,7 @@ class _DashboardContentState extends ConsumerState<DashboardContent> {
               }
               if (sns.hasData && sns.data != null && sns.data!.isNotEmpty) {
                 return Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: SizedBox(
                     height: 110,
                     child: Row(
@@ -217,23 +216,35 @@ class _DashboardContentState extends ConsumerState<DashboardContent> {
                             return Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Container(
-                                  height: 70,
-                                  width: 70, // Adjust width as needed
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade400,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'Item $index',
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
+                                sns.data![index]['photoUrl'] != null
+                                    ? CircleAvatar(
+                                        backgroundImage: NetworkImage(
+                                          sns.data![index]['photoUrl'],
+                                        ),
+                                        backgroundColor: theme
+                                            .colorScheme.primary
+                                            .withAlpha(180),
+                                        radius: 30,
+                                      )
+                                    : ClipOval(
+                                        child: Container(
+                                          height: 60,
+                                          width: 60,
+                                          color: Colors.blue.shade600,
+                                          child: Center(
+                                            child: Text(
+                                                sns.data![index]['fName']
+                                                    .toString()
+                                                    .split(' ')
+                                                    .last
+                                                    .substring(0, 1)
+                                                    .toUpperCase(),
+                                                style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 30)),
+                                          ),
+                                        ),
+                                      ),
                                 Text(
                                   sns.data![index]['fName'],
                                   //'Name',
@@ -266,85 +277,130 @@ class _DashboardContentState extends ConsumerState<DashboardContent> {
                       child: ListView.builder(
                         itemCount: chat.length,
                         itemBuilder: (context, index) {
-                          //get id of the friend of the current user
-                          var friendUID = chat[index]
-                              .participants
-                              .where((element) => element != currentUser!.uid)
-                              .first;
-                          var friendInforServices = ref
-                              .watch(userDetailProvider)
-                              .getUserInformation(friendUID);
+                          var otherUserId = chat[index].participants.firstWhere(
+                              (element) => element != currentUser!.uid);
+                          var userInforServices = ref
+                              .read(userDetailProvider)
+                              .getUserInformation(otherUserId);
                           return FutureBuilder(
-                            future: friendInforServices,
+                            future: userInforServices,
                             builder: (ctx, snp) {
-                              print('USER MODEL: ${snp.data}');
+                              //TODO: Check if chat is group chat!!!!
                               if (snp.connectionState ==
                                   ConnectionState.waiting) {
-                                return const Text('Loading...');
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
                               }
-                              if (snp.hasError) {
-                                return Text(snp.error.toString());
-                              }
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (ctx) =>
-                                              ChatScreen(user: snp.data!)));
-                                },
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 5),
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            height: 60,
-                                            width: 60,
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey.shade400,
-                                              shape: BoxShape.circle,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  '${snp.data!.fName} ${snp.data!.lName}',
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
+                              if (snp.hasData && snp.data != null) {
+                                // print('USER MODEL (db_content): ${snp.data}');
+                                // print('USER MODEL 1: ${snp.data!.first.uid}');
+                                // print('USER MODEL 2: ${snp.data!.last.uid}');
+                                // var otherUser = snp.data!.firstWhere(
+                                //     (user) => user.uid != currentUser!.uid);
+                                //print('OTHER USES: ${otherUser.uid}');
+                                if (snp.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Text('Loading...');
+                                }
+                                if (snp.hasError) {
+                                  return Text(snp.error.toString());
+                                }
+                                return GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (ctx) => ChatScreen(
+                                                participantsId: chat[index]
+                                                    .participants
+                                                    .map((e) => e.toString())
+                                                    .toList(),
+                                                chatId: chat[index].chatId)));
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 5),
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade200,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            snp.data!.photoUrl != ''
+                                                ? CircleAvatar(
+                                                    backgroundImage:
+                                                        NetworkImage(
+                                                      snp.data!.photoUrl,
+                                                    ),
+                                                    backgroundColor: theme
+                                                        .colorScheme.primary
+                                                        .withAlpha(180),
+                                                    radius: 30,
+                                                  )
+                                                : ClipOval(
+                                                    child: Container(
+                                                      height: 60,
+                                                      width: 60,
+                                                      color:
+                                                          Colors.blue.shade600,
+                                                      child: Center(
+                                                        child: Text(
+                                                            snp.data!.fName
+                                                                .toString()
+                                                                .split(' ')
+                                                                .last
+                                                                .substring(0, 1)
+                                                                .toUpperCase(),
+                                                            style:
+                                                                const TextStyle(
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        30)),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Text(chat[index]
-                                                        .lastMessage),
-                                                    Text(formateLastMessTime(
-                                                        chat[index]
-                                                            .lastMessageTime)),
-                                                  ],
-                                                ),
-                                              ],
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    '${snp.data!.fName} ${snp.data!.lName}',
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(chat[index]
+                                                          .lastMessage),
+                                                      Text(formateLastMessTime(
+                                                          chat[index]
+                                                              .lastMessageTime)),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
+                                );
+                              }
+                              return const Center(
+                                child: Text('Error loading user data'),
                               );
                             },
                           );

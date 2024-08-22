@@ -15,7 +15,7 @@ class ChatModel {
 
   factory ChatModel.fromMap(Map<String, dynamic> map) {
     return ChatModel(
-      chatId: map['chatId'] ?? '',
+      chatId: map['chat_id'] ?? '',
       lastMessage: map['last_message'] ?? '',
       lastMessageTime: (map['last_message_time'] as Timestamp).toDate(),
       participants: map['participants'] ?? [],

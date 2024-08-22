@@ -1,25 +1,45 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:realtime_chatapp/enum/mess_status_enum.dart';
+import 'package:realtime_chatapp/enum/mess_type_enum.dart';
+import 'package:realtime_chatapp/models/message_model.dart';
+import 'package:realtime_chatapp/providers/messages_provider.dart';
 
-class ChatBox extends StatefulWidget {
-  const ChatBox({super.key});
+class ChatBox extends ConsumerStatefulWidget {
+  const ChatBox(
+      {required this.chatId, required this.participantsId, super.key});
+  final String chatId;
+  final List<String> participantsId;
 
   @override
-  State<ChatBox> createState() => _ChatBoxState();
+  ConsumerState<ChatBox> createState() => _ChatBoxState();
 }
 
-class _ChatBoxState extends State<ChatBox> {
+class _ChatBoxState extends ConsumerState<ChatBox> {
   final chatBoxController = TextEditingController();
 
-  void sendMessage() async {
+  Future<void> sendMessage(WidgetRef ref) async {
     final message = chatBoxController.text;
+    final senderId = FirebaseAuth.instance.currentUser!.uid;
+    final dateTime = DateTime.now();
+    const status = MessageStatusEnum.sent;
+    const messType = MessageTypeEnum.text;
     if (message.trim().isEmpty) {
       return;
     }
-    await FirebaseFirestore.instance.collection('chat').add({
-      //TODO: Determine which fields are required for the chat message.
-    });
-    //TODO: Collect the receiver's UID from the chat screen.
+    print('CHAT ID (addNewChat - chat_provider): ${widget.chatId}');
+    //TODO: Implement the addMessage function from the messages_provider.dart
+    ref.read(messagesNotifierProvider(widget.chatId).notifier).addMessage(
+        MessageModel(
+            message: message,
+            messageType: messType,
+            timestamp: dateTime,
+            senderId: senderId,
+            status: status),
+        widget.chatId,
+        widget.participantsId);
     chatBoxController.clear();
   }
 
@@ -60,7 +80,9 @@ class _ChatBoxState extends State<ChatBox> {
             ),
           ),
           IconButton(
-            onPressed: sendMessage,
+            onPressed: () async {
+              await sendMessage(ref);
+            },
             icon: const Icon(Icons.send),
           ),
         ],

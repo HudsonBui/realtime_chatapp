@@ -14,6 +14,7 @@ class ChatNotifier extends _$ChatNotifier {
   Stream<List<ChatModel>> build() {
     //Get account id
     var uid = FirebaseAuth.instance.currentUser!.uid;
+    //print('USER ID (build - chat_provider): $uid');
     return FirebaseFirestore.instance
         .collection('chats')
         .where('participants', arrayContains: uid)
@@ -26,17 +27,40 @@ class ChatNotifier extends _$ChatNotifier {
   }
 
   Future addNewChat(ChatModel chat) async {
-    await FirebaseFirestore.instance.collection('chats').add({
-      'participants': chat.participants,
-      'last_message': chat.lastMessage as Timestamp,
-      'last_message_time': chat.lastMessageTime,
-    });
+    var isExisten = false;
+    var docSnapshot = await FirebaseFirestore.instance
+        .collection('chats')
+        .doc(chat.chatId)
+        .get();
+    isExisten = docSnapshot.exists;
+    print('CHECK ISEXISTEN (addNewChat - chat_provider): $isExisten');
+    print('CHAT ID (addNewChat - chat_provider): ${chat.chatId}');
+    print('DOC DATA (addNewChat - chat_provider): ${docSnapshot.data()}');
+    if (isExisten) {
+      updateLastMessage(chat);
+      print('UPDATE CHAT SUCCESSFULLY (addNewChat - chat_provider)');
+      return;
+    } else {
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chat.chatId)
+          .set({
+        'chat_id': chat.chatId,
+        'participants': chat.participants,
+        'last_message': chat.lastMessage,
+        'last_message_time': Timestamp.fromDate(chat.lastMessageTime),
+      }, SetOptions(merge: true));
+    }
+    print('ADD CHAT SUCCESSFULLY (addNewChat - chat_provider)');
   }
 
-  Future updateLastMessage(String lastMessage) async {
-    await FirebaseFirestore.instance.collection('chats').doc().update({
-      'last_message': lastMessage,
-      'last_message_time': Timestamp.now(),
+  Future updateLastMessage(ChatModel chat) async {
+    await FirebaseFirestore.instance
+        .collection('chats')
+        .doc(chat.chatId)
+        .update({
+      'last_message': chat.lastMessage,
+      'last_message_time': Timestamp.fromDate(chat.lastMessageTime),
     });
   }
 }
