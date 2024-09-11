@@ -1,16 +1,8 @@
-w# realtime_chatapp
+# Realtime chat app
 
-A new Flutter project.
+## Description
+This project is to build a realtime chat app. You can chat with your friend in realtime and see if they are online or not. You can even video call them in realtime using Agora Services.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Usage
+Initialize your vitual device
+Register an account in the app and start using the app , you can search your friend through your friends phone number

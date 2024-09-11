@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:realtime_chatapp/models/user_models.dart';
 import 'package:realtime_chatapp/providers/account_provider.dart';
-import 'package:realtime_chatapp/style/text_style.dart';
+import 'package:realtime_chatapp/utils/text_style.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({required this.user, super.key});

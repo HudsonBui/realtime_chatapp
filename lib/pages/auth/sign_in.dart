@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:realtime_chatapp/pages/auth/forgot_password.dart';
 import 'package:realtime_chatapp/services/user_status_services.dart';
-import 'package:realtime_chatapp/style/text_style.dart';
+import 'package:realtime_chatapp/utils/text_style.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({required this.showSignUp, super.key});

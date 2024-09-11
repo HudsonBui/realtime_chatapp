@@ -6,6 +6,8 @@ import 'package:realtime_chatapp/pages/widget/chatbox_widget.dart';
 import 'package:realtime_chatapp/pages/widget/message_bubble.dart';
 import 'package:realtime_chatapp/providers/messages_provider.dart';
 import 'package:realtime_chatapp/providers/user_provider.dart';
+import 'package:realtime_chatapp/screen/call_screen/call_holding_screen.dart';
+import 'package:realtime_chatapp/screen/call_screen/video_call_screen.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen(
@@ -36,7 +38,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         builder: (ctx, snp) {
           if (snp.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(),
+              child: SizedBox.shrink(),
             );
           }
           if (snp.hasData && snp.data != null) {
@@ -120,7 +122,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (cxt) {
+                            return VideoCallScreen(
+                              participants: snp.data!,
+                              chatId: widget.chatId,
+                            );
+                          },
+                        ),
+                      );
+                    },
                     icon: const Icon(
                       Icons.videocam,
                       size: 25,
@@ -183,7 +196,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       error: (error, stack) =>
                           Center(child: Text(error.toString())),
                       loading: () {
-                        return const Center(child: CircularProgressIndicator());
+                        //TODO: Find out how to eliminate CircularProgressIndicator() from the screen + Implement cache for messages
+                        return const Center(
+                          child: SizedBox.shrink(),
+                        );
                       },
                     ),
                   ),

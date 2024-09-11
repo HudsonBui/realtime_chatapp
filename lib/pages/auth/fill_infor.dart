@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:realtime_chatapp/style/text_style.dart';
+import 'package:realtime_chatapp/utils/text_style.dart';
 
 class FillInforPage extends StatefulWidget {
   const FillInforPage({required this.userId, super.key});

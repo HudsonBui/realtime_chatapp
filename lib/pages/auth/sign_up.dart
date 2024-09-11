@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:realtime_chatapp/services/user_status_services.dart';
-import 'package:realtime_chatapp/style/text_style.dart';
+import 'package:realtime_chatapp/utils/text_style.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({required this.showSignIn, super.key});

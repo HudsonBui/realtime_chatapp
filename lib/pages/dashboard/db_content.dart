@@ -309,14 +309,17 @@ class _DashboardContentState extends ConsumerState<DashboardContent> {
                                 return GestureDetector(
                                   onTap: () {
                                     Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (ctx) => ChatScreen(
-                                                participantsId: chat[index]
-                                                    .participants
-                                                    .map((e) => e.toString())
-                                                    .toList(),
-                                                chatId: chat[index].chatId)));
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (ctx) => ChatScreen(
+                                          participantsId: chat[index]
+                                              .participants
+                                              .map((e) => e.toString())
+                                              .toList(),
+                                          chatId: chat[index].chatId,
+                                        ),
+                                      ),
+                                    );
                                   },
                                   child: Container(
                                     margin: const EdgeInsets.symmetric(
@@ -349,18 +352,18 @@ class _DashboardContentState extends ConsumerState<DashboardContent> {
                                                           Colors.blue.shade600,
                                                       child: Center(
                                                         child: Text(
-                                                            snp.data!.fName
-                                                                .toString()
-                                                                .split(' ')
-                                                                .last
-                                                                .substring(0, 1)
-                                                                .toUpperCase(),
-                                                            style:
-                                                                const TextStyle(
-                                                                    color: Colors
-                                                                        .white,
-                                                                    fontSize:
-                                                                        30)),
+                                                          snp.data!.fName
+                                                              .toString()
+                                                              .split(' ')
+                                                              .last
+                                                              .substring(0, 1)
+                                                              .toUpperCase(),
+                                                          style:
+                                                              const TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 30,
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -382,11 +385,27 @@ class _DashboardContentState extends ConsumerState<DashboardContent> {
                                                         MainAxisAlignment
                                                             .spaceBetween,
                                                     children: [
-                                                      Text(chat[index]
-                                                          .lastMessage),
-                                                      Text(formateLastMessTime(
+                                                      Expanded(
+                                                        flex: 7,
+                                                        child: Text(
                                                           chat[index]
-                                                              .lastMessageTime)),
+                                                              .lastMessage,
+                                                          overflow: TextOverflow
+                                                              .visible,
+                                                          maxLines: 1,
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        flex: 3,
+                                                        child: Text(
+                                                          formateLastMessTime(chat[
+                                                                  index]
+                                                              .lastMessageTime),
+                                                          // overflow:
+                                                          //     TextOverflow.fade,
+                                                          maxLines: 1,
+                                                        ),
+                                                      ),
                                                     ],
                                                   ),
                                                 ],
